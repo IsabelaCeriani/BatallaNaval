@@ -1,28 +1,26 @@
 package dpoi.BatallaNaval.controllers.dtos;
 
+import lombok.*;
+
+import java.util.UUID;
+
+@Getter
+@Setter
+@ToString
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class UserDTO {
 
+    private String id;
+
     private  String name;
-    private  String password;
 
-    public UserDTO(String name, String password) {
-        this.name = name;
-        this.password = password;
-    }
+    private String email;
 
-    public String getName() {
-        return name;
-    }
+    private String profilePicture;
 
-    public String getPassword() {
-        return password;
-    }
+    private int gamesPlayed;
 
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public void setPassword(String password) {
-        this.password = password;
-    }
+    private int gamesWon;
 }
