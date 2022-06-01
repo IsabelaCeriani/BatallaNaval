@@ -25,6 +25,7 @@ public class UserController {
     @Autowired
     private UserService userService;
 
+    @CrossOrigin(origins = "http://localhost:3000")
     @PostMapping("")
     public ResponseEntity<UserDTO> addUser(@RequestParam String token) throws GeneralSecurityException, IOException {
         val user = userService.getUserInfo(token);
