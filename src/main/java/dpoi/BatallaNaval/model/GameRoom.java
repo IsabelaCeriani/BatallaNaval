@@ -1,5 +1,6 @@
 package dpoi.BatallaNaval.model;
 
+import dpoi.BatallaNaval.controllers.dtos.GameRoomDTO;
 import lombok.*;
 
 import javax.persistence.*;
@@ -23,7 +24,11 @@ public class GameRoom {
     private String player2Id;
 
 
-
-
-
+    public GameRoomDTO toDTO() {
+        return GameRoomDTO.builder()
+                .gameRoomId(this.id)
+                .player1Id(this.player1Id)
+                .player2Id(this.player2Id)
+                .build();
+    }
 }
