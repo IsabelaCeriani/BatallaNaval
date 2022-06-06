@@ -5,5 +5,7 @@ public enum Status {
     MESSAGE,
     LEAVE,
     POSITIONING,
-    WAITING
+    WAITING,
+    READY,
+    STANDBY,
 }

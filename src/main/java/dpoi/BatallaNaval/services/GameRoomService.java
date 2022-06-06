@@ -4,11 +4,14 @@ import dpoi.BatallaNaval.controllers.dtos.GameRoomDTO;
 import dpoi.BatallaNaval.exception.GameFullException;
 import dpoi.BatallaNaval.exception.GameNotFoundException;
 import dpoi.BatallaNaval.model.GameRoom;
+import dpoi.BatallaNaval.model.Position;
 import dpoi.BatallaNaval.respositories.GameRoomRepository;
 import lombok.val;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -17,8 +20,12 @@ public class GameRoomService {
     @Autowired
     private GameRoomRepository gameRoomRepository;
 
-    public UUID createGame(String userId) {
+    public UUID createGame() {
         GameRoom gameRoom = GameRoom.builder()
+                .positionsPlayer1(List.of())
+                .positionsPlayer2(List.of())
+                .shotsPlayer1(List.of())
+                .shotsPlayer2(List.of())
                 .build();
 
         return gameRoomRepository.save(gameRoom).getId();
@@ -77,4 +84,38 @@ public class GameRoomService {
             throw new GameNotFoundException("Game not found with that id");
         }
     }
+
+    public GameRoom setPositions(UUID gameRoomId, Integer[][] positions, String userId) {
+        val gameRoomOptional = gameRoomRepository.findById(gameRoomId);
+
+        if (gameRoomOptional.isPresent()) {
+            val gameRoom = gameRoomOptional.get();
+            if (gameRoom.getPlayer1Id().equals(userId)) {
+                gameRoom.setPositionsPlayer1(createPositionList(positions));
+                gameRoomRepository.save(gameRoom);
+            } else if (gameRoom.getPlayer2Id().equals(userId)) {
+                gameRoom.setPositionsPlayer2(createPositionList(positions));
+                gameRoomRepository.save(gameRoom);
+            } else {
+                throw new GameNotFoundException("Game not found with that id");
+            }
+            return gameRoomRepository.save(gameRoom);
+        } else {
+            throw new GameNotFoundException("Game not found with that id");
+        }
+    }
+
+    private List<Position> createPositionList(Integer[][] positions) {
+        List<Position> positionList = new ArrayList<>();
+        for (int i = 0; i < positions.length; i++) {
+            for (int j = 0; j < positions[i].length; j++) {
+                positionList.add(Position.builder()
+                        .x(i)
+                        .y(j)
+                        .build());
+            }
+        }
+        return positionList;
+    }
+
 }
