@@ -1,5 +1,7 @@
 package dpoi.BatallaNaval.exceptionHandler;
 
+import dpoi.BatallaNaval.exception.GameFullException;
+import dpoi.BatallaNaval.exception.GameNotFoundException;
 import dpoi.BatallaNaval.exception.NotValidTokenException;
 import org.hibernate.exception.ConstraintViolationException;
 import org.slf4j.Logger;
@@ -26,5 +28,17 @@ public class DefaultExceptionHandler {
     public ResponseEntity<?> handleValidationExceptions(ConstraintViolationException exception) {
         logger.info(exception.getMessage());
         return ResponseEntity.badRequest().build();
+    }
+
+    @ExceptionHandler(GameNotFoundException.class)
+    public ResponseEntity<?> handleGameNotFoundException(GameNotFoundException exception) {
+        logger.info(exception.getMessage());
+        return new ResponseEntity(exception.getMessage(), HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(GameFullException.class)
+    public ResponseEntity<?> handleGameFullException(GameFullException exception) {
+        logger.info(exception.getMessage());
+        return new ResponseEntity(exception.getMessage(), HttpStatus.BAD_REQUEST);
     }
 }
