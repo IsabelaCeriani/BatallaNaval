@@ -1,6 +1,6 @@
 package dpoi.BatallaNaval.controllers;
 
-import dpoi.BatallaNaval.model.Message;
+import dpoi.BatallaNaval.model.messages.Message;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
@@ -20,10 +20,11 @@ public class ChatController {
         return message;
     }
 
-    @MessageMapping("/private-message")
+    /*@MessageMapping("/private-message")
     public Message recMessage(@Payload Message message){
-        simpMessagingTemplate.convertAndSendToUser(message.getReceiverName(),"/private",message);
-        System.out.println(message.toString());
-        return message;
-    }
+        //logica para enviar mensaje privado
+        //simpMessagingTemplate.convertAndSendToUser(message.getReceiverName(),"/private",message);
+        //System.out.println(message.toString());
+        //return message;
+    }*/
 }

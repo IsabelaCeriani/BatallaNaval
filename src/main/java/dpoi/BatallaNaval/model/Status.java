@@ -3,5 +3,7 @@ package dpoi.BatallaNaval.model;
 public enum Status {
     JOIN,
     MESSAGE,
-    LEAVE
+    LEAVE,
+    POSITIONING,
+    WAITING
 }

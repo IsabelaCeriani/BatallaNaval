@@ -19,7 +19,6 @@ public class GameRoomService {
 
     public UUID createGame(String userId) {
         GameRoom gameRoom = GameRoom.builder()
-                .player1Id(userId)
                 .build();
 
         return gameRoomRepository.save(gameRoom).getId();
@@ -52,6 +51,28 @@ public class GameRoomService {
             } else {
                 throw new GameFullException("Game is full");
             }
+        } else {
+            throw new GameNotFoundException("Game not found with that id");
+        }
+    }
+
+    public boolean hasPlayerOne(UUID gameRoomId) {
+        val gameRoomOptional = gameRoomRepository.findById(gameRoomId);
+
+        if (gameRoomOptional.isPresent()) {
+            return gameRoomOptional.get().getPlayer1Id() != null;
+        } else {
+            throw new GameNotFoundException("Game not found with that id");
+        }
+    }
+
+    public void setPlayerOne(UUID gameRoomId, String userId) {
+        val gameRoomOptional = gameRoomRepository.findById(gameRoomId);
+
+        if (gameRoomOptional.isPresent()) {
+            val gameRoom = gameRoomOptional.get();
+            gameRoom.setPlayer1Id(userId);
+            gameRoomRepository.save(gameRoom);
         } else {
             throw new GameNotFoundException("Game not found with that id");
         }
