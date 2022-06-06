@@ -46,9 +46,7 @@ public class GameRoomController {
     }
 
     @MessageMapping("/join")
-    @SendTo("/gameroom")
     public Message recMessage(@Payload JoinMessage message){
-        //logica para enviar mensaje privado
        if(gameroomService.hasPlayerOne(message.getGameRoomId())){
            gameroomService.joinGame(message.getGameRoomId(), message.getUserId());
            val returnMessage= new Message(Status.POSITIONING);
