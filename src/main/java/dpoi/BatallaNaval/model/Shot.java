@@ -21,6 +21,8 @@ public class Shot {
     @GeneratedValue(strategy = GenerationType.AUTO)
     private UUID id;
 
+    private String shooterId;
+
     private int x;
 
     private int y;

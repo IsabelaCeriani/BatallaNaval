@@ -8,4 +8,5 @@ public enum Status {
     WAITING,
     READY,
     STANDBY,
+    GAME_OVER,
 }

@@ -1,6 +1,5 @@
 package dpoi.BatallaNaval.model.messages;
 
-import dpoi.BatallaNaval.model.Status;
 import lombok.*;
 import org.springframework.messaging.MessageHeaders;
 
@@ -9,11 +8,15 @@ import org.springframework.messaging.MessageHeaders;
 @Getter
 @Setter
 @ToString
-public class Message implements org.springframework.messaging.Message<Message> {
-    private Status status;
+public class ShotFeedback implements org.springframework.messaging.Message<ShotFeedback>{
+
+    private String shooterId;
+    private int x;
+    private int y;
+    private boolean hit;
 
     @Override
-    public Message getPayload() {
+    public ShotFeedback getPayload() {
         return this;
     }
 

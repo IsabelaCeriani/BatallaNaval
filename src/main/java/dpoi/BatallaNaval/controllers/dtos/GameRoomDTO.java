@@ -18,4 +18,6 @@ public class GameRoomDTO {
 
     private String player2Id;
 
+    private String playerToShoot;
+
 }

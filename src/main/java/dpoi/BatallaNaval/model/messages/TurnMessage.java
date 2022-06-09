@@ -1,6 +1,6 @@
 package dpoi.BatallaNaval.model.messages;
 
-import dpoi.BatallaNaval.model.Status;
+import dpoi.BatallaNaval.model.Turn;
 import lombok.*;
 import org.springframework.messaging.MessageHeaders;
 
@@ -9,11 +9,12 @@ import org.springframework.messaging.MessageHeaders;
 @Getter
 @Setter
 @ToString
-public class Message implements org.springframework.messaging.Message<Message> {
-    private Status status;
+public class TurnMessage implements org.springframework.messaging.Message<TurnMessage> {
+
+    private Turn turn;
 
     @Override
-    public Message getPayload() {
+    public TurnMessage getPayload() {
         return this;
     }
 

@@ -5,6 +5,7 @@ import dpoi.BatallaNaval.exception.GameFullException;
 import dpoi.BatallaNaval.exception.GameNotFoundException;
 import dpoi.BatallaNaval.model.GameRoom;
 import dpoi.BatallaNaval.model.Position;
+import dpoi.BatallaNaval.model.Shot;
 import dpoi.BatallaNaval.respositories.GameRoomRepository;
 import lombok.val;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,6 +13,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 
 @Service
@@ -49,7 +51,8 @@ public class GameRoomService {
         val gameRoomOptional = gameRoomRepository.findById(gameRoomId);
 
         if (gameRoomOptional.isPresent()) {
-            if (gameRoomOptional.get().getPlayer2Id() == null) {
+            //todo: separar el && a otro if para tirar otra excpcion si el usuario ya esta en la partida
+            if (gameRoomOptional.get().getPlayer2Id() == null && !Objects.equals(gameRoomOptional.get().getPlayer1Id(), userId)) {
                 val gameRoom= gameRoomOptional.get();
                 gameRoom.setPlayer2Id(userId);
                 gameRoomRepository.save(gameRoom);
@@ -79,6 +82,7 @@ public class GameRoomService {
         if (gameRoomOptional.isPresent()) {
             val gameRoom = gameRoomOptional.get();
             gameRoom.setPlayer1Id(userId);
+            gameRoom.setPlayerToShoot(userId);
             gameRoomRepository.save(gameRoom);
         } else {
             throw new GameNotFoundException("Game not found with that id");
@@ -118,4 +122,82 @@ public class GameRoomService {
         return positionList;
     }
 
+    public boolean isPlayerOne(UUID gameRoomId,String shooterId) {
+        val gameRoomOptional = gameRoomRepository.findById(gameRoomId);
+
+        if (gameRoomOptional.isPresent()) {
+            return gameRoomOptional.get().getPlayer1Id().equals(shooterId);
+        } else {
+            return false;
+        }
+
+    }
+
+    public boolean ifPlayerWon(UUID gameRoomId,String playerId) {
+
+        val gameRoomOptional = gameRoomRepository.findById(gameRoomId);
+
+        if (gameRoomOptional.isPresent()) {
+            val gameRoom = gameRoomOptional.get();
+            if (gameRoom.getPlayer1Id().equals(playerId)) {
+                return gameRoom.getShotsPlayer1().stream().filter(Shot::isHit).count() == 17;
+            } else if (gameRoom.getPlayer2Id().equals(playerId)) {
+                return gameRoom.getShotsPlayer2().stream().filter(Shot::isHit).count() == 17;
+            } else {
+                throw new GameNotFoundException("Game not found with that that player");
+            }
+        } else {
+            throw new GameNotFoundException("Game not found with that id");
+        }
+
+    }
+
+    public Shot shoot(UUID gameRoomId, String shooterId, int x, int y) {
+        val gameRoomOptional = gameRoomRepository.findById(gameRoomId);
+
+        if (gameRoomOptional.isPresent()) {
+            val gameRoom = gameRoomOptional.get();
+            if (gameRoom.getPlayer1Id().equals(shooterId)) {
+                val shot = Shot.builder()
+                        .x(x)
+                        .y(y)
+                        .build();
+                // check if the shot hits a position in player 2
+                val position = gameRoom.getPositionsPlayer2().stream()
+                        .filter(p -> p.getX()==(x) && p.getY()==(y))
+                        .findFirst();
+                if (position.isPresent()) {
+                    shot.setHit(true);
+                }else{
+                    shot.setHit(false);
+                }
+                gameRoom.getShotsPlayer1().add(shot);
+                gameRoomRepository.save(gameRoom);
+                return shot;
+            } else if (gameRoom.getPlayer2Id().equals(shooterId)) {
+                val shot = Shot.builder()
+                        .x(x)
+                        .y(y)
+                        .build();
+
+                // check if the shot hits a position in player 1
+                val position = gameRoom.getPositionsPlayer1().stream()
+                        .filter(p -> p.getX()==(x) && p.getY()==(y))
+                        .findFirst();
+                if (position.isPresent()) {
+                    shot.setHit(true);
+                }else{
+                    shot.setHit(false);
+                }
+
+                gameRoom.getShotsPlayer2().add(shot);
+                gameRoomRepository.save(gameRoom);
+                return shot;
+            } else {
+                throw new GameNotFoundException("Game not found with that that player");
+            }
+        } else {
+            throw new GameNotFoundException("Game not found with that id");
+        }
+    }
 }

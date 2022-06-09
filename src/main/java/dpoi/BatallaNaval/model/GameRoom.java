@@ -43,12 +43,15 @@ public class GameRoom {
     @LazyCollection(LazyCollectionOption.FALSE)
     private List<Position> positionsPlayer2;
 
+    private String playerToShoot;
+
 
     public GameRoomDTO toDTO() {
         return GameRoomDTO.builder()
                 .gameRoomId(this.id)
                 .player1Id(this.player1Id)
                 .player2Id(this.player2Id)
+                .playerToShoot(this.playerToShoot)
                 .build();
     }
 }

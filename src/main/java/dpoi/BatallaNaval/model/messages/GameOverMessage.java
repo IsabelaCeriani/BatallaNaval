@@ -9,11 +9,13 @@ import org.springframework.messaging.MessageHeaders;
 @Getter
 @Setter
 @ToString
-public class Message implements org.springframework.messaging.Message<Message> {
+public class GameOverMessage implements org.springframework.messaging.Message<GameOverMessage> {
+
     private Status status;
+    private String winnerId;
 
     @Override
-    public Message getPayload() {
+    public GameOverMessage getPayload() {
         return this;
     }
 
