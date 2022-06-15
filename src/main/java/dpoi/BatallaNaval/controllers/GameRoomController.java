@@ -1,7 +1,6 @@
 package dpoi.BatallaNaval.controllers;
 
 import dpoi.BatallaNaval.controllers.dtos.GameRoomDTO;
-import dpoi.BatallaNaval.model.GameRoom;
 import dpoi.BatallaNaval.model.Shot;
 import dpoi.BatallaNaval.model.Status;
 import dpoi.BatallaNaval.model.Turn;
@@ -37,41 +36,47 @@ public class GameRoomController {
 
     @GetMapping
     public ResponseEntity<?> getGameRoom(@RequestParam UUID gameRoomId){
-        val chatRoomDTO = gameroomService.getGame(gameRoomId);
+        val chatRoomDTO = gameroomService.getGameDTO(gameRoomId);
         return ResponseEntity.status(HttpStatus.OK).body(chatRoomDTO);
     }
 
 
     @MessageMapping("/join")
-    public Message joinGameRoom(@Payload JoinMessage message){
-       if(gameroomService.hasPlayerOne(message.getGameRoomId())){
-           gameroomService.joinGame(message.getGameRoomId(), message.getUserId());
-           val returnMessage= new Message(Status.POSITIONING);
-           simpMessagingTemplate.convertAndSend("/game/"+message.getGameRoomId()+"/private",returnMessage );
-           return returnMessage;
-       }else{
-           gameroomService.setPlayerOne(message.getGameRoomId(), message.getUserId());
-           val returnMessage= new Message(Status.WAITING);
-           simpMessagingTemplate.convertAndSend("/game/"+message.getGameRoomId()+"/private",returnMessage );
-           return returnMessage;
-       }
+    public void joinGameRoom(@Payload JoinMessage message){
+        if(gameIsFull(message.getGameRoomId())){
+            if(playerBelongsToGame(message.getGameRoomId(), message.getUserId())){
+                loadGame(message.getGameRoomId());
+            }else{
+                simpMessagingTemplate.convertAndSend("/user/"+message.getUserId()+"/private",new Message(Status.GAME_FULL));
+            }
+        }else{
+            if(playerBelongsToGame(message.getGameRoomId(), message.getUserId())){
+                val returnMessage= new Message(Status.WAITING);
+                simpMessagingTemplate.convertAndSend("/game/"+message.getGameRoomId()+"/private",returnMessage );
+            }else{
+                if(gameHasOnePlayer(message.getGameRoomId())){
+                    gameroomService.setPlayerTwo(message.getGameRoomId(), message.getUserId());
+
+                    simpMessagingTemplate.convertAndSend("/game/"+message.getGameRoomId()+"/private", new Message(Status.POSITIONING) );
+                }else{
+                    gameroomService.setPlayerOne(message.getGameRoomId(), message.getUserId());
+
+                    simpMessagingTemplate.convertAndSend("/game/"+message.getGameRoomId()+"/private",new Message(Status.WAITING) );
+                }
+            }
+        }
     }
 
+
+
     @MessageMapping("/board")
-    public Message sendPositions(@Payload PositionMessage message){
-        GameRoom game= gameroomService.setPositions(message.getGameRoomId(), message.getPositions(), message.getUserId());
-        if(!game.getPositionsPlayer1().isEmpty()&&!game.getPositionsPlayer2().isEmpty()){
-            val messageForPlayer1= new GameLoadMessage(Turn.YOUR_TURN,game.getPositionsPlayer1(), game.getShotsPlayer1(), game.getShotsPlayer2());
-            simpMessagingTemplate.convertAndSend("/user/"+game.getPlayer1Id()+"/private",messageForPlayer1 );
-            val messageForPlayer2= new GameLoadMessage(Turn.OPPONENT_TURN,game.getPositionsPlayer2(), game.getShotsPlayer2(), game.getShotsPlayer1());
-            simpMessagingTemplate.convertAndSend("/user/"+game.getPlayer2Id()+"/private",messageForPlayer2 );
-            val returnMessage= new Message(Status.READY);
-            simpMessagingTemplate.convertAndSend("/game/"+message.getGameRoomId()+"/private",returnMessage );
-            return returnMessage;
+    public void sendPositions(@Payload PositionMessage message){
+
+        if(gameroomService.boardsAreReady(message.getGameRoomId())){
+            loadGame(message.getGameRoomId());
         }else{
             val returnMessage= new Message(Status.STANDBY);
             simpMessagingTemplate.send("/user/"+message.getUserId()+"/private",returnMessage );
-            return returnMessage;
         }
     }
 
@@ -82,9 +87,9 @@ public class GameRoomController {
         val shotFeedback= new ShotFeedback(shot.getShooterId(),shot.getX(),shot.getY(),shot.isHit());
         simpMessagingTemplate.convertAndSend("/game/"+message.getGameRoomId()+"/private",shotFeedback);
 
-        GameRoomDTO game= gameroomService.getGame(message.getGameRoomId());
+        GameRoomDTO game= gameroomService.getGameDTO(message.getGameRoomId());
 
-        if(gameroomService.ifPlayerWon(message.getGameRoomId(), message.getShooterId())){
+        if(gameroomService.playerWon(message.getGameRoomId(), message.getShooterId())){
             val returnMessage= new GameOverMessage(Status.GAME_OVER, message.getShooterId());
             simpMessagingTemplate.convertAndSend("/game/"+message.getGameRoomId()+"/private",returnMessage);
         }
@@ -101,6 +106,42 @@ public class GameRoomController {
             simpMessagingTemplate.convertAndSend("/user/"+game.getPlayer2Id()+"/private",messageForPlayer2);
         }
     }
+
+
+    private void loadGame(UUID gameRoomId) {
+        val game = gameroomService.getGameRoom(gameRoomId);
+        GameLoadMessage messageForPlayer1;
+        GameLoadMessage messageForPlayer2;
+
+        if(gameroomService.isPlayerOneTurn(gameRoomId)){
+            messageForPlayer1= new GameLoadMessage(Turn.YOUR_TURN,game.getPositionsPlayer1(), game.getShotsPlayer1(), game.getShotsPlayer2());
+            messageForPlayer2= new GameLoadMessage(Turn.OPPONENT_TURN,game.getPositionsPlayer2(), game.getShotsPlayer2(), game.getShotsPlayer1());
+        }else{
+             messageForPlayer1= new GameLoadMessage(Turn.OPPONENT_TURN,game.getPositionsPlayer1(), game.getShotsPlayer1(), game.getShotsPlayer2());
+             messageForPlayer2= new GameLoadMessage(Turn.YOUR_TURN,game.getPositionsPlayer2(), game.getShotsPlayer2(), game.getShotsPlayer1());
+        }
+
+        simpMessagingTemplate.convertAndSend("/user/"+game.getPlayer1Id()+"/private",messageForPlayer1 );
+        simpMessagingTemplate.convertAndSend("/user/"+game.getPlayer2Id()+"/private",messageForPlayer2 );
+
+        val returnMessage= new Message(Status.READY);
+        simpMessagingTemplate.convertAndSend("/game/"+ gameRoomId+"/private",returnMessage );
+    }
+
+    private boolean playerBelongsToGame(UUID gameRoomId, String userId) {
+        return gameroomService.playerBelongsToGame(gameRoomId, userId);
+    }
+
+    private boolean gameIsFull(UUID gameRoomID) {
+        return gameroomService.gameIsFull(gameRoomID);
+    }
+
+    private boolean gameHasOnePlayer(UUID gameRoomId) {
+        return gameroomService.hasPlayerOne(gameRoomId);
+    }
+
+
+
 
 
 }

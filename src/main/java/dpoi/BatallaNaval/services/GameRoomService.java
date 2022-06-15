@@ -1,7 +1,6 @@
 package dpoi.BatallaNaval.services;
 
 import dpoi.BatallaNaval.controllers.dtos.GameRoomDTO;
-import dpoi.BatallaNaval.exception.GameFullException;
 import dpoi.BatallaNaval.exception.GameNotFoundException;
 import dpoi.BatallaNaval.model.GameRoom;
 import dpoi.BatallaNaval.model.Position;
@@ -13,7 +12,6 @@ import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 import java.util.UUID;
 
 @Service
@@ -33,7 +31,7 @@ public class GameRoomService {
         return gameRoomRepository.save(gameRoom).getId();
     }
 
-    public GameRoomDTO getGame(UUID gameRoomId) {
+    public GameRoomDTO getGameDTO(UUID gameRoomId) {
         val gameRoom = gameRoomRepository.findById(gameRoomId);
 
         if (gameRoom.isPresent()) {
@@ -42,48 +40,6 @@ public class GameRoomService {
                     .player1Id(gameRoom.get().getPlayer1Id())
                     .player2Id(gameRoom.get().getPlayer2Id())
                     .build();
-        } else {
-            throw new GameNotFoundException("Game not found with that id");
-        }
-    }
-
-    public GameRoomDTO joinGame(UUID gameRoomId, String userId) {
-        val gameRoomOptional = gameRoomRepository.findById(gameRoomId);
-
-        if (gameRoomOptional.isPresent()) {
-            //todo: separar el && a otro if para tirar otra excpcion si el usuario ya esta en la partida
-            if (gameRoomOptional.get().getPlayer2Id() == null && !Objects.equals(gameRoomOptional.get().getPlayer1Id(), userId)) {
-                val gameRoom= gameRoomOptional.get();
-                gameRoom.setPlayer2Id(userId);
-                gameRoomRepository.save(gameRoom);
-
-                return gameRoom.toDTO();
-            } else {
-                throw new GameFullException("Game is full");
-            }
-        } else {
-            throw new GameNotFoundException("Game not found with that id");
-        }
-    }
-
-    public boolean hasPlayerOne(UUID gameRoomId) {
-        val gameRoomOptional = gameRoomRepository.findById(gameRoomId);
-
-        if (gameRoomOptional.isPresent()) {
-            return gameRoomOptional.get().getPlayer1Id() != null;
-        } else {
-            throw new GameNotFoundException("Game not found with that id");
-        }
-    }
-
-    public void setPlayerOne(UUID gameRoomId, String userId) {
-        val gameRoomOptional = gameRoomRepository.findById(gameRoomId);
-
-        if (gameRoomOptional.isPresent()) {
-            val gameRoom = gameRoomOptional.get();
-            gameRoom.setPlayer1Id(userId);
-            gameRoom.setPlayerToShoot(userId);
-            gameRoomRepository.save(gameRoom);
         } else {
             throw new GameNotFoundException("Game not found with that id");
         }
@@ -122,35 +78,7 @@ public class GameRoomService {
         return positionList;
     }
 
-    public boolean isPlayerOne(UUID gameRoomId,String shooterId) {
-        val gameRoomOptional = gameRoomRepository.findById(gameRoomId);
 
-        if (gameRoomOptional.isPresent()) {
-            return gameRoomOptional.get().getPlayer1Id().equals(shooterId);
-        } else {
-            return false;
-        }
-
-    }
-
-    public boolean ifPlayerWon(UUID gameRoomId,String playerId) {
-
-        val gameRoomOptional = gameRoomRepository.findById(gameRoomId);
-
-        if (gameRoomOptional.isPresent()) {
-            val gameRoom = gameRoomOptional.get();
-            if (gameRoom.getPlayer1Id().equals(playerId)) {
-                return gameRoom.getShotsPlayer1().stream().filter(Shot::isHit).count() == 17;
-            } else if (gameRoom.getPlayer2Id().equals(playerId)) {
-                return gameRoom.getShotsPlayer2().stream().filter(Shot::isHit).count() == 17;
-            } else {
-                throw new GameNotFoundException("Game not found with that that player");
-            }
-        } else {
-            throw new GameNotFoundException("Game not found with that id");
-        }
-
-    }
 
     public Shot shoot(UUID gameRoomId, String shooterId, int x, int y) {
         val gameRoomOptional = gameRoomRepository.findById(gameRoomId);
@@ -200,4 +128,73 @@ public class GameRoomService {
             throw new GameNotFoundException("Game not found with that id");
         }
     }
+
+    public GameRoom getGameRoom(UUID gameRoomId) {
+        val gameRoomOptional = gameRoomRepository.findById(gameRoomId);
+
+        if (gameRoomOptional.isPresent()) {
+            return gameRoomOptional.get();
+        } else {
+            throw new GameNotFoundException("Game not found with that id");
+        }
+    }
+
+    public boolean isPlayerOneTurn(UUID gameRoomId) {
+        val game= getGameRoom(gameRoomId);
+        return game.getPlayerToShoot().equals(game.getPlayer1Id());
+
+    }
+
+    public boolean gameIsFull(UUID gameRoomId) {
+        val game= getGameRoom(gameRoomId);
+        return game.getPlayer1Id() != null && game.getPlayer2Id() != null;
+
+    }
+
+    public boolean playerBelongsToGame(UUID gameRoomId, String userId) {
+        val game= getGameRoom(gameRoomId);
+        return game.getPlayer1Id().equals(userId) || game.getPlayer2Id().equals(userId);
+    }
+
+    public boolean boardsAreReady(UUID gameRoomId) {
+        val game= getGameRoom(gameRoomId);
+        return !game.getPositionsPlayer1().isEmpty()&&!game.getPositionsPlayer2().isEmpty();
+    }
+
+    public boolean playerWon(UUID gameRoomId, String playerId) {
+        val game= getGameRoom(gameRoomId);
+
+        if (game.getPlayer1Id().equals(playerId)) {
+            return game.getShotsPlayer1().stream().filter(Shot::isHit).count() == 17;
+        } else if (game.getPlayer2Id().equals(playerId)) {
+            return game.getShotsPlayer2().stream().filter(Shot::isHit).count() == 17;
+        } else {
+            throw new GameNotFoundException("Game not found with that that player");
+        }
+    }
+
+    public boolean isPlayerOne(UUID gameRoomId,String shooterId) {
+        val game= getGameRoom(gameRoomId);
+        return game.getPlayer1Id().equals(shooterId);
+    }
+
+    public boolean hasPlayerOne(UUID gameRoomId) {
+        val game= getGameRoom(gameRoomId);
+        return game.getPlayer1Id() != null;
+
+    }
+
+    public void setPlayerOne(UUID gameRoomId, String userId) {
+        val game= getGameRoom(gameRoomId);
+        game.setPlayer1Id(userId);
+        game.setPlayerToShoot(userId);
+        gameRoomRepository.save(game);
+    }
+
+    public void setPlayerTwo(UUID gameRoomId, String userId) {
+        val game= getGameRoom(gameRoomId);
+        game.setPlayer2Id(userId);
+        gameRoomRepository.save(game);
+    }
+
 }
