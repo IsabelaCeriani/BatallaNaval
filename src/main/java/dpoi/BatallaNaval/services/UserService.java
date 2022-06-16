@@ -76,4 +76,18 @@ public class UserService {
     }
 
 
+    public void updateWinnerStatics(String winnerId) {
+        User user = getUser(winnerId);
+        user.setGamesWon(user.getGamesWon() + 1);
+        userRepository.save(user);
+    }
+
+    public void updatePlayerStatics(String player1Id, String player2Id) {
+        User player1 = getUser(player1Id);
+        User player2 = getUser(player2Id);
+        player1.setGamesPlayed(player1.getGamesPlayed() + 1);
+        player2.setGamesPlayed(player2.getGamesPlayed() + 1);
+        userRepository.save(player1);
+        userRepository.save(player2);
+    }
 }

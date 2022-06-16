@@ -45,7 +45,7 @@ public class GameRoomService {
         }
     }
 
-    public GameRoom setPositions(UUID gameRoomId, Integer[][] positions, String userId) {
+    public void setPositions(UUID gameRoomId, Integer[][] positions, String userId) {
         val gameRoomOptional = gameRoomRepository.findById(gameRoomId);
 
         if (gameRoomOptional.isPresent()) {
@@ -57,9 +57,8 @@ public class GameRoomService {
                 gameRoom.setPositionsPlayer2(createPositionList(positions));
                 gameRoomRepository.save(gameRoom);
             } else {
-                throw new GameNotFoundException("Game not found with that id");
+                throw new GameNotFoundException("User not found in game");
             }
-            return gameRoomRepository.save(gameRoom);
         } else {
             throw new GameNotFoundException("Game not found with that id");
         }

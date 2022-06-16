@@ -6,6 +6,7 @@ import dpoi.BatallaNaval.model.Status;
 import dpoi.BatallaNaval.model.Turn;
 import dpoi.BatallaNaval.model.messages.*;
 import dpoi.BatallaNaval.services.GameRoomService;
+import dpoi.BatallaNaval.services.UserService;
 import lombok.val;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -24,6 +25,9 @@ public class GameRoomController {
 
     @Autowired
     GameRoomService gameroomService;
+
+    @Autowired
+    UserService userService;
 
     @Autowired
     private SimpMessagingTemplate simpMessagingTemplate;
@@ -75,8 +79,12 @@ public class GameRoomController {
         if(gameroomService.boardsAreReady(message.getGameRoomId())){
             loadGame(message.getGameRoomId());
         }else{
+            gameroomService.setPositions(message.getGameRoomId(), message.getPositions(), message.getUserId());
             val returnMessage= new Message(Status.STANDBY);
             simpMessagingTemplate.send("/user/"+message.getUserId()+"/private",returnMessage );
+            if(gameroomService.boardsAreReady(message.getGameRoomId())){
+                loadGame(message.getGameRoomId());
+            }
         }
     }
 
@@ -90,6 +98,8 @@ public class GameRoomController {
         GameRoomDTO game= gameroomService.getGameDTO(message.getGameRoomId());
 
         if(gameroomService.playerWon(message.getGameRoomId(), message.getShooterId())){
+            userService.updateWinnerStatics(message.getShooterId());
+            userService.updatePlayerStatics(gameroomService.getGameRoom(message.getGameRoomId()).getPlayer1Id(),gameroomService.getGameRoom(message.getGameRoomId()).getPlayer2Id());
             val returnMessage= new GameOverMessage(Status.GAME_OVER, message.getShooterId());
             simpMessagingTemplate.convertAndSend("/game/"+message.getGameRoomId()+"/private",returnMessage);
         }
