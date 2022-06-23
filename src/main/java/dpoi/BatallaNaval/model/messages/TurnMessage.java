@@ -2,7 +2,6 @@ package dpoi.BatallaNaval.model.messages;
 
 import dpoi.BatallaNaval.model.Turn;
 import lombok.*;
-import org.springframework.messaging.MessageHeaders;
 
 @NoArgsConstructor
 @AllArgsConstructor
@@ -11,6 +10,6 @@ import org.springframework.messaging.MessageHeaders;
 @ToString
 public class TurnMessage {
 
-    private Turn turn;
+    private Turn status;
 
 }

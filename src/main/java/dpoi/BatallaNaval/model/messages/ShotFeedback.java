@@ -1,5 +1,6 @@
 package dpoi.BatallaNaval.model.messages;
 
+import dpoi.BatallaNaval.model.Status;
 import lombok.*;
 import org.springframework.messaging.MessageHeaders;
 
@@ -10,6 +11,7 @@ import org.springframework.messaging.MessageHeaders;
 @ToString
 public class ShotFeedback implements org.springframework.messaging.Message<ShotFeedback>{
 
+    private Status status;
     private String shooterId;
     private int x;
     private int y;

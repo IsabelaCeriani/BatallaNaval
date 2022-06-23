@@ -66,13 +66,8 @@ public class GameRoomService {
 
     private List<Position> createPositionList(Integer[][] positions) {
         List<Position> positionList = new ArrayList<>();
-        for (int i = 0; i < positions.length; i++) {
-            for (int j = 0; j < positions[i].length; j++) {
-                positionList.add(Position.builder()
-                        .x(i)
-                        .y(j)
-                        .build());
-            }
+        for (Integer[] position : positions) {
+            positionList.add(Position.builder().x(position[0]).y(position[1]).build());
         }
         return positionList;
     }

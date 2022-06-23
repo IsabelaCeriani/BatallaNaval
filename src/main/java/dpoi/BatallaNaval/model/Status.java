@@ -12,4 +12,5 @@ public enum Status {
     GAME_FULL,
     GAME_ENDED,
     ERROR,
+    FEEDBACK,
 }
