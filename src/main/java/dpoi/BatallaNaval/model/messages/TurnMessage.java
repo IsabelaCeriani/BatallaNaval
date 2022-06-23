@@ -9,17 +9,8 @@ import org.springframework.messaging.MessageHeaders;
 @Getter
 @Setter
 @ToString
-public class TurnMessage implements org.springframework.messaging.Message<TurnMessage> {
+public class TurnMessage {
 
     private Turn turn;
 
-    @Override
-    public TurnMessage getPayload() {
-        return this;
-    }
-
-    @Override
-    public MessageHeaders getHeaders() {
-        return null;
-    }
 }

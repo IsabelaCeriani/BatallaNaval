@@ -129,6 +129,8 @@ public class GameRoomService {
     }
 
     public GameRoom getGameRoom(UUID gameRoomId) {
+        System.out.println("llegue hasta aca 5");
+
         val gameRoomOptional = gameRoomRepository.findById(gameRoomId);
 
         if (gameRoomOptional.isPresent()) {
@@ -152,7 +154,14 @@ public class GameRoomService {
 
     public boolean playerBelongsToGame(UUID gameRoomId, String userId) {
         val game= getGameRoom(gameRoomId);
-        return game.getPlayer1Id().equals(userId) || game.getPlayer2Id().equals(userId);
+        if(gameIsFull(gameRoomId)){
+            return game.getPlayer1Id().equals(userId) || game.getPlayer2Id().equals(userId);
+        }else{
+            if(game.getPlayer1Id()!= null){
+                return game.getPlayer1Id().equals(userId);
+            }
+            return false;
+        }
     }
 
     public boolean boardsAreReady(UUID gameRoomId) {
@@ -192,8 +201,19 @@ public class GameRoomService {
 
     public void setPlayerTwo(UUID gameRoomId, String userId) {
         val game= getGameRoom(gameRoomId);
+        System.out.println("llegue hasta aca 4");
         game.setPlayer2Id(userId);
         gameRoomRepository.save(game);
     }
 
+    public boolean gameEnded(UUID gameRoomId) {
+        val game= getGameRoom(gameRoomId);
+        return game.isGameEnded();
+    }
+
+    public void endGame(UUID gameRoomId) {
+        val game= getGameRoom(gameRoomId);
+        game.setGameEnded(true);
+        gameRoomRepository.save(game);
+    }
 }

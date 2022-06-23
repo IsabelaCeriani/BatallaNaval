@@ -1,6 +1,6 @@
 package dpoi.BatallaNaval.controllers;
 
-import dpoi.BatallaNaval.model.messages.Message;
+import dpoi.BatallaNaval.model.messages.StatusMessage;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
@@ -16,8 +16,8 @@ public class ChatController {
 
     @MessageMapping("/message")
     @SendTo("/chatroom/public")
-    public Message receiveMessage(@Payload Message message){
-        return message;
+    public StatusMessage receiveMessage(@Payload StatusMessage statusMessage){
+        return statusMessage;
     }
 
     /*@MessageMapping("/private-message")

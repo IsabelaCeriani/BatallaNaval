@@ -20,4 +20,6 @@ public class GameRoomDTO {
 
     private String playerToShoot;
 
+    private boolean gameEnded;
+
 }

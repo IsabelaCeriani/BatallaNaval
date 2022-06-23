@@ -1,7 +1,6 @@
 package dpoi.BatallaNaval.model;
 
 import dpoi.BatallaNaval.controllers.dtos.GameRoomDTO;
-import dpoi.BatallaNaval.model.Shot;
 import lombok.*;
 import org.hibernate.annotations.LazyCollection;
 import org.hibernate.annotations.LazyCollectionOption;
@@ -45,6 +44,8 @@ public class GameRoom {
 
     private String playerToShoot;
 
+    private boolean gameEnded;
+
 
     public GameRoomDTO toDTO() {
         return GameRoomDTO.builder()
@@ -52,6 +53,7 @@ public class GameRoom {
                 .player1Id(this.player1Id)
                 .player2Id(this.player2Id)
                 .playerToShoot(this.playerToShoot)
+                .gameEnded(this.gameEnded)
                 .build();
     }
 }

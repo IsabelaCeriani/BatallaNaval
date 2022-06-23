@@ -10,4 +10,6 @@ public enum Status {
     STANDBY,
     GAME_OVER,
     GAME_FULL,
+    GAME_ENDED,
+    ERROR,
 }
