@@ -30,31 +30,32 @@ public class GameRoomController {
     @Autowired
     private SimpMessagingTemplate simpMessagingTemplate;
 
+    @CrossOrigin(origins = "http://localhost:3000")
     @PostMapping
     public ResponseEntity<?> createGameRoom(){
         val chatRoomId = gameroomService.createGame();
         return ResponseEntity.status(HttpStatus.OK).body(chatRoomId);
     }
 
+    @CrossOrigin(origins = "http://localhost:3000")
     @GetMapping
     public ResponseEntity<?> getGameRoom(@RequestParam UUID gameRoomId){
         val chatRoomDTO = gameroomService.getGame(gameRoomId);
         return ResponseEntity.status(HttpStatus.OK).body(chatRoomDTO);
     }
 
-
     @MessageMapping("/join")
-    public Message joinGameRoom(@Payload JoinMessage message){
+    public void joinGameRoom(@Payload JoinMessage message){
        if(gameroomService.hasPlayerOne(message.getGameRoomId())){
            gameroomService.joinGame(message.getGameRoomId(), message.getUserId());
            val returnMessage= new Message(Status.POSITIONING);
-           simpMessagingTemplate.send("/game/"+message.getGameRoomId()+"/private",returnMessage );
-           return returnMessage;
+           simpMessagingTemplate.convertAndSend("/game/"+message.getGameRoomId()+"/private",returnMessage );
+//           return returnMessage;
        }else{
            gameroomService.setPlayerOne(message.getGameRoomId(), message.getUserId());
            val returnMessage= new Message(Status.WAITING);
-           simpMessagingTemplate.send("/game/"+message.getGameRoomId()+"/private",returnMessage );
-           return returnMessage;
+           simpMessagingTemplate.convertAndSend("/game/"+message.getGameRoomId()+"/private",returnMessage );
+//           return returnMessage;
        }
     }
 
@@ -63,15 +64,15 @@ public class GameRoomController {
         GameRoom game= gameroomService.setPositions(message.getGameRoomId(), message.getPositions(), message.getUserId());
         if(!game.getPositionsPlayer1().isEmpty()&&!game.getPositionsPlayer2().isEmpty()){
             val returnMessage= new Message(Status.READY);
-            simpMessagingTemplate.send("/game/"+message.getGameRoomId()+"/private",returnMessage );
-            val messageForPlayer1= new GameLoadMessage(game.getPositionsPlayer1(), game.getShotsPlayer1(), game.getShotsPlayer2());
-            simpMessagingTemplate.send("/user/"+game.getPlayer1Id()+"/private",messageForPlayer1 );
-            val messageForPlayer2= new GameLoadMessage(game.getPositionsPlayer2(), game.getShotsPlayer2(), game.getShotsPlayer1());
-            simpMessagingTemplate.send("/user/"+game.getPlayer2Id()+"/private",messageForPlayer2 );
+            simpMessagingTemplate.convertAndSend("/game/"+message.getGameRoomId()+"/private",returnMessage );
+            val messageForPlayer1= new GameLoadMessage("GAME_LOAD", game.getPositionsPlayer1(), game.getShotsPlayer1(), game.getShotsPlayer2());
+            simpMessagingTemplate.convertAndSend("/user/"+game.getPlayer1Id()+"/private",messageForPlayer1 );
+            val messageForPlayer2= new GameLoadMessage("GAME_LOAD", game.getPositionsPlayer2(), game.getShotsPlayer2(), game.getShotsPlayer1());
+            simpMessagingTemplate.convertAndSend("/user/"+game.getPlayer2Id()+"/private",messageForPlayer2 );
             return returnMessage;
         }else{
             val returnMessage= new Message(Status.STANDBY);
-            simpMessagingTemplate.send("/user/"+message.getUserId()+"/private",returnMessage );
+            simpMessagingTemplate.convertAndSend("/user/"+message.getUserId()+"/private",returnMessage );
             return returnMessage;
         }
     }

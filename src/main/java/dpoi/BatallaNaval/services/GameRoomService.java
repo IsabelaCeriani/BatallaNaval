@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 
 @Service
@@ -49,7 +50,7 @@ public class GameRoomService {
         val gameRoomOptional = gameRoomRepository.findById(gameRoomId);
 
         if (gameRoomOptional.isPresent()) {
-            if (gameRoomOptional.get().getPlayer2Id() == null) {
+            if (gameRoomOptional.get().getPlayer2Id() == null && !Objects.equals(gameRoomOptional.get().getPlayer1Id(), userId)) {
                 val gameRoom= gameRoomOptional.get();
                 gameRoom.setPlayer2Id(userId);
                 gameRoomRepository.save(gameRoom);
@@ -107,15 +108,10 @@ public class GameRoomService {
 
     private List<Position> createPositionList(Integer[][] positions) {
         List<Position> positionList = new ArrayList<>();
-        for (int i = 0; i < positions.length; i++) {
-            for (int j = 0; j < positions[i].length; j++) {
-                positionList.add(Position.builder()
-                        .x(i)
-                        .y(j)
-                        .build());
-            }
+        for (Integer[] position : positions) {
+            positionList.add(Position.builder().x(position[0]).y(position[1]).build());
         }
-        return positionList;
+            return positionList;
     }
 
 }

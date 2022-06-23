@@ -12,16 +12,8 @@ import java.util.UUID;
 @Getter
 @Setter
 @ToString
-public class Message implements org.springframework.messaging.Message<Message> {
+public class Message {
+
     private Status status;
 
-    @Override
-    public Message getPayload() {
-        return this;
-    }
-
-    @Override
-    public MessageHeaders getHeaders() {
-        return null;
-    }
 }
