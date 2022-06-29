@@ -124,6 +124,11 @@ public class GameRoomController {
         }
     }
 
+    @MessageMapping("/message")
+    public void sendMessage(@Payload ChatMessage message){
+        simpMessagingTemplate.convertAndSend("/game/"+message.getGameRoomId()+"/message",message);
+    }
+
     @MessageMapping("/shoot")
     public void shoot(@Payload ShotMessage message){
         Shot shot= gameroomService.shoot(message.getGameRoomId(), message.getShooterId(), message.getX(), message.getY());
