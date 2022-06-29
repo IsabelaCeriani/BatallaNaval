@@ -211,4 +211,9 @@ public class GameRoomService {
         game.setGameEnded(true);
         gameRoomRepository.save(game);
     }
+
+    public boolean allPositionsSet(UUID gameRoomId) {
+        val game= getGameRoom(gameRoomId);
+        return !game.getPositionsPlayer1().isEmpty() && !game.getPositionsPlayer2().isEmpty();
+    }
 }

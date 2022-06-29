@@ -55,7 +55,7 @@ public class GameRoomController {
                     if(gameroomService.gameEnded(message.getGameRoomId())){
                         simpMessagingTemplate.convertAndSend("/user/"+message.getUserId()+"/private",new StatusMessage(Status.GAME_ENDED));
                     }else{
-                        loadGame(message.getGameRoomId());
+                        loadGame(message.getGameRoomId(), message.getUserId());
                     }
                 }else{
                     simpMessagingTemplate.convertAndSend("/user/"+message.getUserId()+"/private",new StatusMessage(Status.GAME_FULL));
@@ -91,13 +91,13 @@ public class GameRoomController {
     public void sendPositions(@Payload PositionMessage message){
 
         if(gameroomService.boardsAreReady(message.getGameRoomId())){
-            loadGame(message.getGameRoomId());
+            loadGame(message.getGameRoomId(), message.getUserId());
         }else{
             gameroomService.setPositions(message.getGameRoomId(), message.getPositions(), message.getUserId());
 
             simpMessagingTemplate.convertAndSend("/user/"+message.getUserId()+"/private", new StatusMessage(Status.STANDBY) );
             if(gameroomService.boardsAreReady(message.getGameRoomId())){
-                loadGame(message.getGameRoomId());
+                loadGame(message.getGameRoomId(), message.getUserId());
             }
         }
     }
@@ -129,24 +129,42 @@ public class GameRoomController {
     }
 
 
-    private void loadGame(UUID gameRoomId) {
+    private void loadGame(UUID gameRoomId, String userId) {
         val game = gameroomService.getGameRoom(gameRoomId);
-        GameLoadMessage messageForPlayer1;
-        GameLoadMessage messageForPlayer2;
+
+        if(gameroomService.allPositionsSet(gameRoomId)){
+            GameLoadMessage messageForPlayer1;
+            GameLoadMessage messageForPlayer2;
 
 
-        if(gameroomService.isPlayerOneTurn(gameRoomId)){
-            messageForPlayer1 = new GameLoadMessage(Turn.YOUR_TURN,game.getPositionsPlayer1(), game.getShotsPlayer1(), game.getShotsPlayer2());
-            messageForPlayer2 = new GameLoadMessage(Turn.OPPONENT_TURN,game.getPositionsPlayer2(), game.getShotsPlayer2(), game.getShotsPlayer1());
+            if(gameroomService.isPlayerOneTurn(gameRoomId)){
+                messageForPlayer1 = new GameLoadMessage(Turn.YOUR_TURN,game.getPositionsPlayer1(), game.getShotsPlayer1(), game.getShotsPlayer2());
+                messageForPlayer2 = new GameLoadMessage(Turn.OPPONENT_TURN,game.getPositionsPlayer2(), game.getShotsPlayer2(), game.getShotsPlayer1());
+            }else{
+                messageForPlayer1= new GameLoadMessage(Turn.OPPONENT_TURN,game.getPositionsPlayer1(), game.getShotsPlayer1(), game.getShotsPlayer2());
+                messageForPlayer2= new GameLoadMessage(Turn.YOUR_TURN,game.getPositionsPlayer2(), game.getShotsPlayer2(), game.getShotsPlayer1());
+            }
+
+            simpMessagingTemplate.convertAndSend("/user/"+game.getPlayer1Id()+"/private",messageForPlayer1 );
+            simpMessagingTemplate.convertAndSend("/user/"+game.getPlayer2Id()+"/private",messageForPlayer2 );
+
+            simpMessagingTemplate.convertAndSend("/game/"+ gameRoomId+"/private",new StatusMessage(Status.READY) );
         }else{
-            messageForPlayer1= new GameLoadMessage(Turn.OPPONENT_TURN,game.getPositionsPlayer1(), game.getShotsPlayer1(), game.getShotsPlayer2());
-            messageForPlayer2= new GameLoadMessage(Turn.YOUR_TURN,game.getPositionsPlayer2(), game.getShotsPlayer2(), game.getShotsPlayer1());
+            if(userId.equals(game.getPlayer1Id())){
+                if(game.getPositionsPlayer1().isEmpty()){
+                    simpMessagingTemplate.convertAndSend("/user/"+game.getPlayer1Id()+"/private",new StatusMessage(Status.POSITIONING) );
+                }else{
+                    simpMessagingTemplate.convertAndSend("/user/"+game.getPlayer1Id()+"/private",new StatusMessage(Status.STANDBY) );
+                }
+            }else{
+                if(game.getPositionsPlayer2().isEmpty()){
+                    simpMessagingTemplate.convertAndSend("/user/"+game.getPlayer2Id()+"/private",new StatusMessage(Status.POSITIONING) );
+                }else{
+                    simpMessagingTemplate.convertAndSend("/user/"+game.getPlayer2Id()+"/private",new StatusMessage(Status.STANDBY) );
+                }
+            }
         }
 
-        simpMessagingTemplate.convertAndSend("/user/"+game.getPlayer1Id()+"/private",messageForPlayer1 );
-        simpMessagingTemplate.convertAndSend("/user/"+game.getPlayer2Id()+"/private",messageForPlayer2 );
-
-        simpMessagingTemplate.convertAndSend("/game/"+ gameRoomId+"/private",new StatusMessage(Status.READY) );
     }
 
     private boolean playerBelongsToGame(UUID gameRoomId, String userId) {
