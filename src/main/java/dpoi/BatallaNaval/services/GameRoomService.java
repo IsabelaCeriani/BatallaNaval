@@ -81,6 +81,7 @@ public class GameRoomService {
             val gameRoom = gameRoomOptional.get();
             if (gameRoom.getPlayer1Id().equals(shooterId)) {
                 val shot = Shot.builder()
+                        .shooterId(shooterId)
                         .x(x)
                         .y(y)
                         .build();
@@ -98,6 +99,7 @@ public class GameRoomService {
                 return shot;
             } else if (gameRoom.getPlayer2Id().equals(shooterId)) {
                 val shot = Shot.builder()
+                        .shooterId(shooterId)
                         .x(x)
                         .y(y)
                         .build();
