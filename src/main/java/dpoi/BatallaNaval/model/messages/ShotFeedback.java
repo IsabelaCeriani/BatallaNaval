@@ -2,14 +2,13 @@ package dpoi.BatallaNaval.model.messages;
 
 import dpoi.BatallaNaval.model.Status;
 import lombok.*;
-import org.springframework.messaging.MessageHeaders;
 
 @NoArgsConstructor
 @AllArgsConstructor
 @Getter
 @Setter
 @ToString
-public class ShotFeedback implements org.springframework.messaging.Message<ShotFeedback>{
+public class ShotFeedback {
 
     private Status status;
     private String shooterId;
@@ -17,13 +16,4 @@ public class ShotFeedback implements org.springframework.messaging.Message<ShotF
     private int y;
     private boolean hit;
 
-    @Override
-    public ShotFeedback getPayload() {
-        return this;
-    }
-
-    @Override
-    public MessageHeaders getHeaders() {
-        return null;
-    }
 }

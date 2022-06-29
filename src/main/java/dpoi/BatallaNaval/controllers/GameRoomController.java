@@ -45,6 +45,14 @@ public class GameRoomController {
         return ResponseEntity.status(HttpStatus.OK).body(chatRoomDTO);
     }
 
+    @GetMapping("/positions")
+    public ResponseEntity<?> getPositions(){
+        //creat random positions
+        val positions = gameroomService.createRandomPositionList();
+        return ResponseEntity.status(HttpStatus.OK).body(positions);
+    }
+
+
 
     @MessageExceptionHandler()
     @MessageMapping("/join")
@@ -81,8 +89,6 @@ public class GameRoomController {
             simpMessagingTemplate.convertAndSend("/user/"+message.getUserId()+"/private",new StatusMessage(Status.ERROR));
         }
 
-
-
     }
 
 
@@ -96,6 +102,22 @@ public class GameRoomController {
             gameroomService.setPositions(message.getGameRoomId(), message.getPositions(), message.getUserId());
 
             simpMessagingTemplate.convertAndSend("/user/"+message.getUserId()+"/private", new StatusMessage(Status.STANDBY) );
+            if(gameroomService.boardsAreReady(message.getGameRoomId())){
+                loadGame(message.getGameRoomId(), message.getUserId());
+            }
+        }
+    }
+
+    @MessageMapping("/randomBoard")
+    public void setRandomPositions(@Payload RandomPositionMessage message){
+
+        if(gameroomService.boardsAreReady(message.getGameRoomId())){
+            loadGame(message.getGameRoomId(), message.getUserId());
+        }else{
+            gameroomService.setRandomPositions(message.getGameRoomId(), message.getUserId());
+
+            simpMessagingTemplate.convertAndSend("/user/"+message.getUserId()+"/private", new StatusMessage(Status.STANDBY) );
+
             if(gameroomService.boardsAreReady(message.getGameRoomId())){
                 loadGame(message.getGameRoomId(), message.getUserId());
             }
@@ -164,7 +186,6 @@ public class GameRoomController {
                 }
             }
         }
-
     }
 
     private boolean playerBelongsToGame(UUID gameRoomId, String userId) {

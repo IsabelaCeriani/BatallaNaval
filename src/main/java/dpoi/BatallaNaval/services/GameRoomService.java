@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 import java.util.UUID;
 
 @Service
@@ -19,6 +20,8 @@ public class GameRoomService {
 
     @Autowired
     private GameRoomRepository gameRoomRepository;
+    private final int[] boatSizes = {5,4,3,3,2};
+    private final String[] boatDirections = {"HORIZONTAL RIGHT","HORIZONTAL LEFT","VERTICAL UP","VERTICAL DOWN"};
 
     public UUID createGame() {
         GameRoom gameRoom = GameRoom.builder()
@@ -64,6 +67,117 @@ public class GameRoomService {
         }
     }
 
+
+    public void setRandomPositions(UUID gameRoomId, String userId) {
+        val game= getGameRoom(gameRoomId);
+
+        if (game.getPlayer1Id().equals(userId)) {
+
+            game.setPositionsPlayer1(createRandomPositionList());
+            gameRoomRepository.save(game);
+        } else if (game.getPlayer2Id().equals(userId)) {
+            game.setPositionsPlayer2(createRandomPositionList());
+            gameRoomRepository.save(game);
+        } else {
+            throw new GameNotFoundException("User not found in game");
+        }
+    }
+
+    public List<Position> createRandomPositionList() {
+        Random random = new Random();
+        List<Position> positionList = new ArrayList<>();
+
+        for(int i = 0; i < boatSizes.length; i++) {
+            val boatSize = boatSizes[i];
+            while (true) {
+                val x = random.nextInt(10);
+                val y = random.nextInt(10);
+                val direction = boatDirections[random.nextInt(4)];
+                System.out.println(x + " " + y + " " + direction);
+                if (isValidPosition(x, y, boatSize, direction, positionList)) {
+                    Integer[][] positions= createPositionsArray(x, y, boatSize, direction);
+                    positionList.addAll(createPositionList(positions));
+                    break;
+                }
+            }
+        }
+        return positionList;
+    }
+
+
+    private Integer[][] createPositionsArray(int x, int y, int boatSize, String direction) {
+        Integer[][] positions = new Integer[boatSize][2];
+        for (int i = 0; i < boatSize; i++) {
+            if (direction.equals("HORIZONTAL RIGHT")) {
+                positions[i][0] = x + i;
+                positions[i][1] = y;
+                //positions[x + i,y] = 1;
+            } else if (direction.equals("HORIZONTAL LEFT")) {
+                positions[i][0] = x - i;
+                positions[i][1] = y;
+                //positions[x - i][y] = 1;
+            } else if (direction.equals("VERTICAL UP")) {
+                positions[i][0] = x;
+                positions[i][1] = y + i;
+                //positions[x][y + i] = 1;
+            } else if (direction.equals("VERTICAL DOWN")) {
+                positions[i][0] = x;
+                positions[i][1] = y - i;
+                //positions[x][y - i] = 1;
+            }
+        }
+        return positions;
+    }
+
+    private boolean isValidPosition(int x, int y, int boatSize, String direction, List<Position> positionList) {
+        if (direction.equals("HORIZONTAL RIGHT")) {
+            if (x + boatSize > 10) {
+                return false;
+            }
+            for (int i = 0; i < boatSize; i++) {
+                int finalI = i;
+                if (positionList.stream().anyMatch(p -> p.getX() == x + finalI && p.getY() == y)) {
+                    return false;
+                }
+            }
+            return true;
+        } else if (direction.equals("HORIZONTAL LEFT")) {
+            if (x - boatSize < 0) {
+                return false;
+            }
+            for (int i = 0; i < boatSize; i++) {
+                int finalI = i;
+                if (positionList.stream().anyMatch(p -> p.getX() == x - finalI && p.getY() == y)) {
+                    return false;
+                }
+            }
+            return true;
+        } else if (direction.equals("VERTICAL UP")) {
+            if (y - boatSize < 0) {
+                return false;
+            }
+            for (int i = 0; i < boatSize; i++) {
+                int finalI = i;
+                if (positionList.stream().anyMatch(p -> p.getX() == x && p.getY() == y + finalI)) {
+                    return false;
+                }
+            }
+            return true;
+        } else if (direction.equals("VERTICAL DOWN")) {
+            if (y + boatSize > 10) {
+                return false;
+            }
+            for (int i = 0; i < boatSize; i++) {
+                int finalI = i;
+                if (positionList.stream().anyMatch(p -> p.getX() == x && p.getY() == y - finalI)) {
+                    return false;
+                }
+            }
+            return true;
+        }
+        return false;
+    }
+
     private List<Position> createPositionList(Integer[][] positions) {
         List<Position> positionList = new ArrayList<>();
         for (Integer[] position : positions) {
@@ -81,6 +195,7 @@ public class GameRoomService {
             val gameRoom = gameRoomOptional.get();
             if (gameRoom.getPlayer1Id().equals(shooterId)) {
                 val shot = Shot.builder()
+                        .shooterId(shooterId)
                         .x(x)
                         .y(y)
                         .build();
@@ -95,9 +210,11 @@ public class GameRoomService {
                 }
                 gameRoom.getShotsPlayer1().add(shot);
                 gameRoomRepository.save(gameRoom);
+                changeTurn(gameRoomId);
                 return shot;
             } else if (gameRoom.getPlayer2Id().equals(shooterId)) {
                 val shot = Shot.builder()
+                        .shooterId(shooterId)
                         .x(x)
                         .y(y)
                         .build();
@@ -114,12 +231,22 @@ public class GameRoomService {
 
                 gameRoom.getShotsPlayer2().add(shot);
                 gameRoomRepository.save(gameRoom);
+                changeTurn(gameRoomId);
                 return shot;
             } else {
                 throw new GameNotFoundException("Game not found with that that player");
             }
         } else {
             throw new GameNotFoundException("Game not found with that id");
+        }
+    }
+
+    private void changeTurn(UUID gameRoomId) {
+        val game = getGameRoom(gameRoomId);
+        if (game.getPlayerToShoot().equals(game.getPlayer1Id())) {
+            game.setPlayerToShoot(game.getPlayer2Id());
+        } else {
+            game.setPlayerToShoot(game.getPlayer1Id());
         }
     }
 
