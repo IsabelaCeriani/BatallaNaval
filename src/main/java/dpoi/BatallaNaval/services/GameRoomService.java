@@ -203,11 +203,7 @@ public class GameRoomService {
                 val position = gameRoom.getPositionsPlayer2().stream()
                         .filter(p -> p.getX()==(x) && p.getY()==(y))
                         .findFirst();
-                if (position.isPresent()) {
-                    shot.setHit(true);
-                }else{
-                    shot.setHit(false);
-                }
+                shot.setHit(position.isPresent());
                 gameRoom.getShotsPlayer1().add(shot);
                 gameRoomRepository.save(gameRoom);
                 changeTurn(gameRoomId);
@@ -223,12 +219,7 @@ public class GameRoomService {
                 val position = gameRoom.getPositionsPlayer1().stream()
                         .filter(p -> p.getX()==(x) && p.getY()==(y))
                         .findFirst();
-                if (position.isPresent()) {
-                    shot.setHit(true);
-                }else{
-                    shot.setHit(false);
-                }
-
+                shot.setHit(position.isPresent());
                 gameRoom.getShotsPlayer2().add(shot);
                 gameRoomRepository.save(gameRoom);
                 changeTurn(gameRoomId);
@@ -251,7 +242,6 @@ public class GameRoomService {
     }
 
     public GameRoom getGameRoom(UUID gameRoomId) {
-        System.out.println("llegue hasta aca 5");
 
         val gameRoomOptional = gameRoomRepository.findById(gameRoomId);
 
@@ -342,5 +332,84 @@ public class GameRoomService {
     public boolean allPositionsSet(UUID gameRoomId) {
         val game= getGameRoom(gameRoomId);
         return !game.getPositionsPlayer1().isEmpty() && !game.getPositionsPlayer2().isEmpty();
+    }
+
+    public Shot shootRandom(UUID gameRoomId, String shooterId) {
+        val random = new Random();
+
+        return Shot.builder()
+                .shooterId(shooterId)
+                .x(random.nextInt(10))
+                .y(random.nextInt(10))
+                .build();
+
+        /*
+        val gameRoom= getGameRoom(gameRoomId);
+        val random = new Random();
+
+        int x;
+        int y;
+
+        if (gameRoom.getPlayer1Id().equals(shooterId)) {
+            while (true) {
+                x = random.nextInt(10);
+                y = random.nextInt(10);
+                int finalX = x;
+                int finalY = y;
+                if(gameRoom.getShotsPlayer1().stream().filter(s -> s.getX() == finalX && s.getY() == finalY).count() == 0){
+                    break;
+                }
+            }
+
+            val shot = Shot.builder()
+                    .shooterId(shooterId)
+                    .x(x)
+                    .y(y)
+                    .build();
+            // check if the shot hits a position in player 2
+            val position = gameRoom.getPositionsPlayer2().stream()
+                    .filter(p -> p.getX()==(x) && p.getY()==(y))
+                    .findFirst();
+            shot.setHit(position.isPresent());
+            gameRoom.getShotsPlayer1().add(shot);
+            gameRoomRepository.save(gameRoom);
+            changeTurn(gameRoomId);
+            return shot;
+        } else if (gameRoom.getPlayer2Id().equals(shooterId)) {
+
+            while (true) {
+                x = random.nextInt(10);
+                y = random.nextInt(10);
+                int finalX1 = x;
+                int finalY1 = y;
+                if(gameRoom.getShotsPlayer2().stream().filter(s -> s.getX() == finalX1 && s.getY() == finalY1).count() == 0){
+                    break;
+                }
+            }
+
+            val shot = Shot.builder()
+                    .shooterId(shooterId)
+                    .x(x)
+                    .y(y)
+                    .build();
+
+            // check if the shot hits a position in player 1
+            val position = gameRoom.getPositionsPlayer1().stream()
+                    .filter(p -> p.getX()==(x) && p.getY()==(y))
+                    .findFirst();
+            if (position.isPresent()) {
+                shot.setHit(true);
+            }else{
+                shot.setHit(false);
+            }
+
+            gameRoom.getShotsPlayer2().add(shot);
+            gameRoomRepository.save(gameRoom);
+            changeTurn(gameRoomId);
+            return shot;
+        } else {
+            throw new GameNotFoundException("Game not found with that that player");
+        }
+        */
     }
 }
