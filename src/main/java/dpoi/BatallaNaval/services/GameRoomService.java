@@ -130,50 +130,58 @@ public class GameRoomService {
     }
 
     private boolean isValidPosition(int x, int y, int boatSize, String direction, List<Position> positionList) {
-        if (direction.equals("HORIZONTAL RIGHT")) {
-            if (x + boatSize > 10) {
-                return false;
-            }
-            for (int i = 0; i < boatSize; i++) {
-                int finalI = i;
-                if (positionList.stream().anyMatch(p -> p.getX() == x + finalI && p.getY() == y)) {
+        if(x < 0 || y < 0) return false;
+        switch (direction) {
+            case "HORIZONTAL RIGHT" -> {
+                if (x + boatSize > 10) {
                     return false;
                 }
+                for (int i = 0; i < boatSize; i++) {
+                    int finalX = x + i;
+                    if (finalX < 0) return false;
+                    if (positionList.stream().anyMatch(p -> p.getX() == finalX && p.getY() == y)) {
+                        return false;
+                    }
+                }
+                return true;
             }
-            return true;
-        } else if (direction.equals("HORIZONTAL LEFT")) {
-            if (x - boatSize < 0) {
-                return false;
-            }
-            for (int i = 0; i < boatSize; i++) {
-                int finalI = i;
-                if (positionList.stream().anyMatch(p -> p.getX() == x - finalI && p.getY() == y)) {
+            case "HORIZONTAL LEFT" -> {
+                if (x - boatSize < 0) {
                     return false;
                 }
+                for (int i = 0; i < boatSize; i++) {
+                    int finalX = x - i;
+                    if (positionList.stream().anyMatch(p -> p.getX() == finalX && p.getY() == y)) {
+                        return false;
+                    }
+                }
+                return true;
             }
-            return true;
-        } else if (direction.equals("VERTICAL UP")) {
-            if (y - boatSize < 0) {
-                return false;
-            }
-            for (int i = 0; i < boatSize; i++) {
-                int finalI = i;
-                if (positionList.stream().anyMatch(p -> p.getX() == x && p.getY() == y + finalI)) {
+            case "VERTICAL UP" -> {
+                if (y + boatSize > 10) {
                     return false;
                 }
+                for (int i = 0; i < boatSize; i++) {
+                    int finalY = y + i;
+                    if(finalY < 0) return false;
+                    if (positionList.stream().anyMatch(p -> p.getX() == x && p.getY() == finalY)) {
+                        return false;
+                    }
+                }
+                return true;
             }
-            return true;
-        } else if (direction.equals("VERTICAL DOWN")) {
-            if (y + boatSize > 10) {
-                return false;
-            }
-            for (int i = 0; i < boatSize; i++) {
-                int finalI = i;
-                if (positionList.stream().anyMatch(p -> p.getX() == x && p.getY() == y - finalI)) {
+            case "VERTICAL DOWN" -> {
+                if (y - boatSize < 0) {
                     return false;
                 }
+                for (int i = 0; i < boatSize; i++) {
+                    int finalI = i;
+                    if (positionList.stream().anyMatch(p -> p.getX() == x && p.getY() == y - finalI)) {
+                        return false;
+                    }
+                }
+                return true;
             }
-            return true;
         }
         return false;
     }
