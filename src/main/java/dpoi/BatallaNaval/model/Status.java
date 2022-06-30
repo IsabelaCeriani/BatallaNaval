@@ -13,4 +13,5 @@ public enum Status {
     GAME_ENDED,
     ERROR,
     FEEDBACK,
+    NOT_VALID_SHOT
 }

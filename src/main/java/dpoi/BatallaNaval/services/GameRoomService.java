@@ -72,12 +72,21 @@ public class GameRoomService {
         val game= getGameRoom(gameRoomId);
 
         if (game.getPlayer1Id().equals(userId)) {
-
-            game.setPositionsPlayer1(createRandomPositionList());
-            gameRoomRepository.save(game);
+            List<Position> positions = createRandomPositionList();
+            if(game.getPositionsPlayer1().isEmpty()) {
+                game.setPositionsPlayer1(positions);
+                gameRoomRepository.save(game);
+            }
+            //game.setPositionsPlayer1(createRandomPositionList());
+            //gameRoomRepository.save(game);
         } else if (game.getPlayer2Id().equals(userId)) {
-            game.setPositionsPlayer2(createRandomPositionList());
-            gameRoomRepository.save(game);
+            List<Position> positions = createRandomPositionList();
+            if(game.getPositionsPlayer2().isEmpty()) {
+                game.setPositionsPlayer2(positions);
+                gameRoomRepository.save(game);
+            }
+            //game.setPositionsPlayer2(createRandomPositionList());
+            //gameRoomRepository.save(game);
         } else {
             throw new GameNotFoundException("User not found in game");
         }
@@ -196,11 +205,14 @@ public class GameRoomService {
 
 
 
-    public Shot shoot(UUID gameRoomId, String shooterId, int x, int y) {
+    public Shot shoot(UUID gameRoomId, String shooterId, int x, int y) throws Exception {
         val gameRoomOptional = gameRoomRepository.findById(gameRoomId);
 
         if (gameRoomOptional.isPresent()) {
             val gameRoom = gameRoomOptional.get();
+            if(shotExists(gameRoom, shooterId, x, y)) {
+                throw new Exception("Shot already exists");
+            }
             if (gameRoom.getPlayer1Id().equals(shooterId)) {
                 val shot = Shot.builder()
                         .shooterId(shooterId)
@@ -237,6 +249,18 @@ public class GameRoomService {
             }
         } else {
             throw new GameNotFoundException("Game not found with that id");
+        }
+    }
+
+    private boolean shotExists(GameRoom gameRoom, String shooterId, int x, int y) {
+        if (gameRoom.getPlayer1Id().equals(shooterId)) {
+            return gameRoom.getShotsPlayer1().stream()
+                    .anyMatch(s -> s.getX() == x && s.getY() == y);
+        } else if (gameRoom.getPlayer2Id().equals(shooterId)) {
+            return gameRoom.getShotsPlayer2().stream()
+                    .anyMatch(s -> s.getX() == x && s.getY() == y);
+        } else {
+            return false;
         }
     }
 
@@ -419,5 +443,14 @@ public class GameRoomService {
             throw new GameNotFoundException("Game not found with that that player");
         }
         */
+    }
+
+    public boolean alreadyHasPositions(UUID gameRoomId, String userId) {
+        val game= getGameRoom(gameRoomId);
+        if(game.getPlayer1Id().equals(userId)){
+            return !game.getPositionsPlayer1().isEmpty();
+        }else{
+            return !game.getPositionsPlayer2().isEmpty();
+        }
     }
 }

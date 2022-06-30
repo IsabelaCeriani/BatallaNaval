@@ -111,9 +111,9 @@ public class GameRoomController {
     @MessageMapping("/randomBoard")
     public void setRandomPositions(@Payload RandomPositionMessage message){
 
-//        if(gameroomService.boardsAreReady(message.getGameRoomId())){
-//            loadGame(message.getGameRoomId(), message.getUserId());
-//        }else{
+        if(gameroomService.alreadyHasPositions(message.getGameRoomId(), message.getUserId())){
+            simpMessagingTemplate.convertAndSend("/user/"+message.getUserId()+"/private", new StatusMessage(Status.STANDBY) );
+        }else{
             gameroomService.setRandomPositions(message.getGameRoomId(), message.getUserId());
 
             simpMessagingTemplate.convertAndSend("/user/"+message.getUserId()+"/private", new StatusMessage(Status.STANDBY) );
@@ -121,7 +121,7 @@ public class GameRoomController {
             if(gameroomService.boardsAreReady(message.getGameRoomId())){
                 loadGame(message.getGameRoomId(), message.getUserId());
             }
-//        }
+        }
     }
 
     @MessageMapping("/chatMessage")
@@ -131,21 +131,27 @@ public class GameRoomController {
 
     @MessageMapping("/shoot")
     public void shoot(@Payload ShotMessage message){
-        Shot shot= gameroomService.shoot(message.getGameRoomId(), message.getShooterId(), message.getX(), message.getY());
 
-        simpMessagingTemplate.convertAndSend("/game/"+message.getGameRoomId()+"/private",new ShotFeedback(Status.FEEDBACK,shot.getShooterId(),shot.getX(),shot.getY(),shot.isHit()));
+        try{
+            Shot shot= gameroomService.shoot(message.getGameRoomId(), message.getShooterId(), message.getX(), message.getY());
 
-        GameRoomDTO game= gameroomService.getGameDTO(message.getGameRoomId());
+            simpMessagingTemplate.convertAndSend("/game/"+message.getGameRoomId()+"/private",new ShotFeedback(Status.FEEDBACK,shot.getShooterId(),shot.getX(),shot.getY(),shot.isHit()));
 
-        if(gameroomService.playerWon(message.getGameRoomId(), message.getShooterId())){
-            simpMessagingTemplate.convertAndSend("/game/"+message.getGameRoomId()+"/private",new GameOverMessage(Status.GAME_OVER, message.getShooterId()));
-            userService.updateWinnerStatics(message.getShooterId());
-            userService.updatePlayerStatics(gameroomService.getGameRoom(message.getGameRoomId()).getPlayer1Id(),gameroomService.getGameRoom(message.getGameRoomId()).getPlayer2Id());
-            gameroomService.endGame(message.getGameRoomId());
-            return;
+            GameRoomDTO game= gameroomService.getGameDTO(message.getGameRoomId());
+
+            if(gameroomService.playerWon(message.getGameRoomId(), message.getShooterId())){
+                simpMessagingTemplate.convertAndSend("/game/"+message.getGameRoomId()+"/private",new GameOverMessage(Status.GAME_OVER, message.getShooterId()));
+                userService.updateWinnerStatics(message.getShooterId());
+                userService.updatePlayerStatics(gameroomService.getGameRoom(message.getGameRoomId()).getPlayer1Id(),gameroomService.getGameRoom(message.getGameRoomId()).getPlayer2Id());
+                gameroomService.endGame(message.getGameRoomId());
+                return;
+            }
+
+            sendTurns(shot, game);
+        }catch(Exception e){
+            simpMessagingTemplate.convertAndSend("/user/"+message.getShooterId()+"/private",new TurnMessage(Turn.YOUR_TURN));
         }
 
-        sendTurns(shot, game);
     }
 
     @MessageMapping("/randomShoot")
