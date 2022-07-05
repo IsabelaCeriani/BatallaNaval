@@ -14,6 +14,7 @@ import org.springframework.stereotype.Service;
 import java.io.IOException;
 import java.security.GeneralSecurityException;
 import java.util.Collections;
+import java.util.List;
 
 @Service
 public class UserService {
@@ -71,8 +72,12 @@ public class UserService {
         return userRepository.findById(id).isPresent();
     }
 
-    private User getUser(String id){
+    public User getUser(String id){
         return userRepository.findById(id).get();
+    }
+
+    public UserDTO getUserDTO(String id){
+        return userRepository.findById(id).get().toDTO();
     }
 
 
@@ -89,5 +94,9 @@ public class UserService {
         player2.setGamesPlayed(player2.getGamesPlayed() + 1);
         userRepository.save(player1);
         userRepository.save(player2);
+    }
+
+    public List<UserDTO> getUsers() {
+        return userRepository.findAll().stream().map(User::toDTO).collect(java.util.stream.Collectors.toList());
     }
 }

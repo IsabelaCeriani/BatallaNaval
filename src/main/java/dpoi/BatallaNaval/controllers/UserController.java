@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.io.*;
 import java.security.GeneralSecurityException;
+import java.util.List;
 
 @Controller
 @RequestMapping("/player")
@@ -28,6 +29,19 @@ public class UserController {
     @PostMapping("")
     public ResponseEntity<UserDTO> addUser(@RequestParam String token) throws GeneralSecurityException, IOException {
         val user = userService.getUserInfo(token);
+        return ResponseEntity.status(HttpStatus.OK).body(user);
+    }
+
+    @GetMapping("")
+    public ResponseEntity<List<UserDTO>> getUsers() {
+        val users = userService.getUsers();
+        return ResponseEntity.status(HttpStatus.OK).body(users);
+    }
+
+    //get user by id
+    @GetMapping("/{id}")
+    public ResponseEntity<UserDTO> getUser(@PathVariable String id) {
+        val user = userService.getUserDTO(id);
         return ResponseEntity.status(HttpStatus.OK).body(user);
     }
 
