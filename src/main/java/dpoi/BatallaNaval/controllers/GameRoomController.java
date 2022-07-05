@@ -148,6 +148,12 @@ public class GameRoomController {
         sendShotFeedback(message.getGameRoomId(),message.getShooterId(), shot);
     }
 
+    @MessageMapping("/endGame")
+    public void endGame(@Payload EndGameMessage message){
+        gameroomService.abandonGame(message.getGameRoomId(), message.getExitedPlayerId());
+        simpMessagingTemplate.convertAndSend("/game/"+message.getGameRoomId()+"/private", new StatusMessage(Status.GAME_ENDED));
+    }
+
     private void sendShotFeedback(UUID gameRoomId, String shooterId, Shot shot) {
         simpMessagingTemplate.convertAndSend("/game/"+gameRoomId+"/private",new ShotFeedback(Status.FEEDBACK,shot.getShooterId(),shot.getX(),shot.getY(),shot.isHit()));
 

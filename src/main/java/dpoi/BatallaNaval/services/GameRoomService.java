@@ -20,6 +20,8 @@ public class GameRoomService {
 
     @Autowired
     private GameRoomRepository gameRoomRepository;
+    @Autowired
+    UserService userService;
     private final int[] boatSizes = {5,4,3,3,2};
     private final String[] boatDirections = {"HORIZONTAL RIGHT","HORIZONTAL LEFT","VERTICAL UP","VERTICAL DOWN"};
 
@@ -420,5 +422,17 @@ public class GameRoomService {
         }else{
             return !game.getPositionsPlayer2().isEmpty();
         }
+    }
+
+    public void abandonGame(UUID gameRoomId, String exitedPlayerId) {
+        val game= getGameRoom(gameRoomId);
+        userService.updatePlayerStatics(game.getPlayer1Id(),game.getPlayer2Id());
+        if(game.getPlayer1Id().equals(exitedPlayerId)){
+            userService.updateWinnerStatics(game.getPlayer2Id());
+        }else{
+            userService.updateWinnerStatics(game.getPlayer1Id());
+        };
+        gameRoomRepository.save(game);
+        endGame(gameRoomId);
     }
 }
