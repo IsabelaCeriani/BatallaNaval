@@ -18,6 +18,14 @@ repositories {
 	mavenCentral()
 }
 
+jar {
+	manifest {
+		attributes (
+				'Main-Class': 'dpoi.BatallaNaval.BatallaNavalApplication'
+		)
+	}
+}
+
 dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-data-jpa:2.6.7'
 	implementation 'org.springframework.boot:spring-boot-starter-web:2.6.7'
