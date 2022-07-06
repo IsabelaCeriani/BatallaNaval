@@ -273,6 +273,7 @@ public class GameRoomService {
         } else {
             game.setPlayerToShoot(game.getPlayer1Id());
         }
+        gameRoomRepository.save(game);
     }
 
     public GameRoom getGameRoom(UUID gameRoomId) {
