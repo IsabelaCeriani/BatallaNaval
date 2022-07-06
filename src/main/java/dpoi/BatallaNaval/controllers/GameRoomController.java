@@ -111,9 +111,9 @@ public class GameRoomController {
     @MessageMapping("/randomBoard")
     public void setRandomPositions(@Payload RandomPositionMessage message){
 
-        if(gameroomService.alreadyHasPositions(message.getGameRoomId(), message.getUserId())){
-            simpMessagingTemplate.convertAndSend("/user/"+message.getUserId()+"/private", new StatusMessage(Status.STANDBY) );
-        }else{
+//        if(gameroomService.alreadyHasPositions(message.getGameRoomId(), message.getUserId())){
+//            simpMessagingTemplate.convertAndSend("/user/"+message.getUserId()+"/private", new StatusMessage(Status.STANDBY) );
+//        }else{
             gameroomService.setRandomPositions(message.getGameRoomId(), message.getUserId());
 
             simpMessagingTemplate.convertAndSend("/user/"+message.getUserId()+"/private", new StatusMessage(Status.STANDBY) );
@@ -121,7 +121,7 @@ public class GameRoomController {
             if(gameroomService.boardsAreReady(message.getGameRoomId())){
                 loadGame(message.getGameRoomId(), message.getUserId());
             }
-        }
+//        }
     }
 
     @MessageMapping("/chatMessage")
@@ -202,7 +202,7 @@ public class GameRoomController {
             simpMessagingTemplate.convertAndSend("/user/"+game.getPlayer1Id()+"/private",messageForPlayer1 );
             simpMessagingTemplate.convertAndSend("/user/"+game.getPlayer2Id()+"/private",messageForPlayer2 );
 
-            simpMessagingTemplate.convertAndSend("/game/"+ gameRoomId+"/private",new StatusMessage(Status.READY) );
+//            simpMessagingTemplate.convertAndSend("/game/"+ gameRoomId+"/private",new StatusMessage(Status.READY) );
         }else{
             if(userId.equals(game.getPlayer1Id())){
                 if(game.getPositionsPlayer1().isEmpty()){
