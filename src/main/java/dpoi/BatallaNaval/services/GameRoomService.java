@@ -1,6 +1,7 @@
 package dpoi.BatallaNaval.services;
 
 import dpoi.BatallaNaval.controllers.dtos.GameRoomDTO;
+import dpoi.BatallaNaval.controllers.dtos.UserDTO;
 import dpoi.BatallaNaval.exception.GameNotFoundException;
 import dpoi.BatallaNaval.model.GameRoom;
 import dpoi.BatallaNaval.model.Position;
@@ -435,5 +436,14 @@ public class GameRoomService {
         };
         gameRoomRepository.save(game);
         endGame(gameRoomId);
+    }
+
+    public UserDTO getOpponent(UUID gameRoomId, UUID userId) {
+        val game= getGameRoom(gameRoomId);
+        if(isPlayerOne(gameRoomId,userId.toString())){
+            return userService.getUser(game.getPlayer2Id()).toDTO();
+        }else{
+            return userService.getUser(game.getPlayer1Id()).toDTO();
+        }
     }
 }
