@@ -438,9 +438,9 @@ public class GameRoomService {
         endGame(gameRoomId);
     }
 
-    public UserDTO getOpponent(UUID gameRoomId, UUID userId) {
+    public UserDTO getOpponent(UUID gameRoomId, String userId) {
         val game= getGameRoom(gameRoomId);
-        if(isPlayerOne(gameRoomId,userId.toString())){
+        if(isPlayerOne(gameRoomId,userId)){
             return userService.getUser(game.getPlayer2Id()).toDTO();
         }else{
             return userService.getUser(game.getPlayer1Id()).toDTO();

@@ -53,7 +53,7 @@ public class GameRoomController {
     }
 
     @GetMapping("/getOpponent")
-    public ResponseEntity<?> getOpponent(@RequestParam UUID gameRoomId, @RequestParam UUID userId){
+    public ResponseEntity<?> getOpponent(@RequestParam UUID gameRoomId, @RequestParam String userId){
         val opponent = gameroomService.getOpponent(gameRoomId, userId);
         return ResponseEntity.status(HttpStatus.OK).body(opponent);
     }
