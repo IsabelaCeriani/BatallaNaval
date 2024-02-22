@@ -25,7 +25,7 @@ public class UserService {
     public UserDTO getUserInfo(String token) throws GeneralSecurityException, IOException {
         GoogleIdTokenVerifier verifier = new GoogleIdTokenVerifier.Builder(new NetHttpTransport(), new GsonFactory())
                 // Specify the CLIENT_ID of the app that accesses the backend:
-                .setAudience(Collections.singletonList("471985862015-nm599odp85d7b8lfkhf1nss4m1m1vjtc.apps.googleusercontent.com"))
+                .setAudience(Collections.singletonList("1002439529785-176seou2o0icad73ijfohbeq4lgfeo4j.apps.googleusercontent.com"))
                 .build();
 
         GoogleIdToken idToken = verifier.verify(token);
