@@ -1,26 +1,29 @@
-FROM adoptopenjdk/openjdk17:alpine AS builder
+FROM openjdk:17-jdk-slim AS build
+
+# Install curl and unzip
+RUN apt-get update && \
+    apt-get install -y curl unzip && \
+    rm -rf /var/lib/apt/lists/*
 
 # Install Gradle
-ENV GRADLE_VERSION=7.0
-ENV GRADLE_HOME=/opt/gradle
-ENV PATH=$PATH:$GRADLE_HOME/bin
 WORKDIR /opt
-RUN wget https://services.gradle.org/distributions/gradle-${GRADLE_VERSION}-bin.zip && \
-    unzip gradle-${GRADLE_VERSION}-bin.zip && \
-    rm gradle-${GRADLE_VERSION}-bin.zip
-
-# Set Gradle environment variables
-ENV GRADLE_USER_HOME /cache/.gradle
+RUN curl -L https://services.gradle.org/distributions/gradle-7.6.3-bin.zip -o gradle-7.6.3-bin.zip && \
+    unzip gradle-7.6.3-bin.zip && \
+    rm gradle-7.6.3-bin.zip
 
 # Copy project files and build
 WORKDIR /app
 COPY . .
-RUN gradle build
+RUN /opt/gradle-7.6.3/bin/gradle build
 
 
-FROM openjdk:17-oracle
+# Stage 2: Runtime Stage
+FROM openjdk:17-jdk-slim
 EXPOSE 8080
 RUN mkdir /app
-COPY --from=build /home/gradle/src/build/libs/*.jar /app/batalla_naval-api.jar
-ENTRYPOINT ["java","-jar", "-Dspring.profiles.active=production", "/app/batalla_naval-api.jar"]
-#ENTRYPOINT ["java","-jar", "/app/posts-api.jar"]
+
+# Copy built artifact from the build stage
+COPY --from=build /app/build/libs/*.jar /app/batalla_naval-api.jar
+
+# Set the entrypoint command
+ENTRYPOINT ["java", "-jar", "-Dspring.profiles.active=production", "/app/batalla_naval-api.jar"]
