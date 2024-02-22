@@ -1,12 +1,26 @@
-FROM gradle:7.0-jdk11 AS build
+FROM adoptopenjdk/openjdk17:alpine AS builder
 
-COPY . /home/gradle/src
-WORKDIR /home/gradle/src
-RUN gradle assemble
+# Install Gradle
+ENV GRADLE_VERSION=7.0
+ENV GRADLE_HOME=/opt/gradle
+ENV PATH=$PATH:$GRADLE_HOME/bin
+WORKDIR /opt
+RUN wget https://services.gradle.org/distributions/gradle-${GRADLE_VERSION}-bin.zip && \
+    unzip gradle-${GRADLE_VERSION}-bin.zip && \
+    rm gradle-${GRADLE_VERSION}-bin.zip
+
+# Set Gradle environment variables
+ENV GRADLE_USER_HOME /cache/.gradle
+
+# Copy project files and build
+WORKDIR /app
+COPY . .
+RUN gradle build
+
 
 FROM openjdk:17-oracle
 EXPOSE 8080
 RUN mkdir /app
-COPY --from=build /home/gradle/src/build/libs/*.jar /app/posts-api.jar
-ENTRYPOINT ["java","-jar", "-Dspring.profiles.active=production", "/app/posts-api.jar"]
+COPY --from=build /home/gradle/src/build/libs/*.jar /app/batalla_naval-api.jar
+ENTRYPOINT ["java","-jar", "-Dspring.profiles.active=production", "/app/batalla_naval-api.jar"]
 #ENTRYPOINT ["java","-jar", "/app/posts-api.jar"]
